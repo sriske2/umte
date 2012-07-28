@@ -5,11 +5,11 @@
 # see LICENSE for details.
 #TODO add a menu item to open the current file's directory
 """
-UMTE.py
+umte.py
 
-UMTE, or "Uber Minimal Text Editor" is a python Gtk3 text editor built
+umte, or "Uber Minimal Text Editor" is a python Gtk3 text editor built
 with simplicity in mind.
-UMTE is designed to be a primarily keyboard-shortcut based text editor to
+umte is designed to be a primarily keyboard-shortcut based text editor to
 maximise efficiency.
 """
 
@@ -25,16 +25,16 @@ linenumbers = no
 
 class Config:
     """
-    The configuration class for UMTE to handle configuration stuff.
+    The configuration class for umte to handle configuration stuff.
 
     __init__:
     Define the config file and path and check if they exist.
 
     check_for_conf_path:
-    Check if the config path (~/.config/UMTE/) exists, create it if not.
+    Check if the config path (~/.config/umte/) exists, create it if not.
     
     check_for_conf_file:
-    Check if the config file (~/.config/UMTE/UMTE.conf) exists, create it if not.
+    Check if the config file (~/.config/umte/umte.conf) exists, create it if not.
     
     """
     
@@ -103,15 +103,15 @@ class Config:
                 pass
             else: raise
 
-class UMTE:
+class umte:
     def __init__(self):
-        self.name = "UMTE"
+        self.name = "umte"
         self.path = None
         self.title = 'untitled - ' + self.name
 
         # Load the ui from the glade file
         self.builder = Gtk.Builder()
-        self.builder.add_from_file("../ui/UMTE-filemenu.glade")
+        self.builder.add_from_file("../ui/umte-filemenu.glade")
         
         # Connect the handlers to their callback functions.
         handler = {
@@ -407,7 +407,7 @@ class UMTE:
     
     def on_about_item_activate(self, widget, data=None):
         print("About item activated!")
-        about_dialog = self.builder.get_object("UMTE_aboutdialog")
+        about_dialog = self.builder.get_object("umte_aboutdialog")
         about_dialog.show()
         about_dialog.run()
         about_dialog.destroy()
@@ -430,5 +430,5 @@ class UMTE:
     def on_find_rep_close_button_clicked(self, widget, data=None):
         self.on_find_rep_item_activate(None)
 
-UMTE = UMTE()
+umte = umte()
 Gtk.main()
