@@ -111,7 +111,7 @@ class umte:
 
         # Load the ui from the glade file
         self.builder = Gtk.Builder()
-        self.builder.add_from_file("../ui/umte-filemenu.glade")
+        self.builder.add_from_file("ui/umte.glade")
         
         # Connect the handlers to their callback functions.
         handler = {
@@ -396,7 +396,7 @@ class umte:
             self.text_area.grab_focus()
     
     def on_linenumber_item_toggled(self, widget, data=None):
-        if widget.get_active() and self.confi.read_config("view", "linenumbers") is not True:
+        if widget.get_active() and self.config.read_config("view", "linenumbers") is not True:
             self.text_area.set_show_line_numbers(True)
             # Write this change to the config
             self.config.write_config("view", "linenumbers", "yes")
@@ -429,6 +429,30 @@ class umte:
     
     def on_find_rep_close_button_clicked(self, widget, data=None):
         self.on_find_rep_item_activate(None)
+
+class StatusbarManager:
+    def __init__(self, statusbar):
+        self.statusbar = statusbar
+        self.status_id = 123
+
+        self.status_string = "{} | {} | {} | {}"
+
+    def update_statusbar(self, status_id):
+        pass
+    
+    def clear_statusbar(self):
+        pass
+
+    def get_char_amount(self):
+        pass
+
+    def get_line_amount(self, line_amount):
+        pass
+
+    def get_charset(self, charset):
+        pass
+
+
 
 umte = umte()
 Gtk.main()
