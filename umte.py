@@ -11,6 +11,13 @@ umte, or "Uber Minimal Text Editor" is a python Gtk3 text editor built
 with simplicity in mind.
 umte is designed to be a primarily keyboard-shortcut based text editor to
 maximise efficiency.
+
+__author__ = "Skyler Riske"
+__copyright__ = "Copyright 2012 Skyler Riske"
+__credits__ = ["Skyler Riske"]
+__license__ = "MIT License"
+__version__ = "0.0.1"
+
 """
 
 from gi.repository import Gtk, GtkSource, Gdk
