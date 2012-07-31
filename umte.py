@@ -160,6 +160,11 @@ class umte:
         self.find_rep_box = self.builder.get_object("find_rep_box")
         self.find_entry = self.builder.get_object("find_entry")
         self.replace_entry = self.builder.get_object("replace_entry")
+        self.statusbar = self.builder.get_object("statusbar1")
+
+        # Load the statusbar manager
+        self.status_manager = StatusbarManager(self.statusbar)
+        self.status_manager.update_statusbar(self.buff)
 
         # Load the config
         self.config = Config(self.name)
@@ -184,6 +189,10 @@ class umte:
         # Add the text area to the box from the glade file
         self.main_box = self.builder.get_object("main_box")
         self.main_box.pack_start(self.scroll1, True, True, 0)
+        
+        # self.scroll1 is not at the correct position in self.main_box,
+        # set it to its proper position.
+        self.main_box.reorder_child(self.scroll1, 2)
     
     def create_clipboard(self):
         """Create a clipboard object"""
@@ -265,6 +274,9 @@ class umte:
             if self.title[0] != '*':
                 self.title = '*' + self.title
                 self.set_title(self.title)
+
+        # Update the statusbar with the latest information
+        self.status_manager.update_statusbar(self.buff)
     
     def open_file(self):
         pass
@@ -440,26 +452,44 @@ class umte:
 class StatusbarManager:
     def __init__(self, statusbar):
         self.statusbar = statusbar
-        self.status_id = 123
+        self.stat_id = self.statusbar.get_context_id("status_id")
 
-        self.status_string = "{} | {} | {} | {}"
+        # The message to be shown in the left of the statusbar
+        self.status = "ready!"
 
-    def update_statusbar(self, status_id):
-        pass
+    def create_status_string(self):
+        self.status_string = "{} | lines: {} | length: {} | charset: {}"\
+            .format(self.status, self.line_count, self.char_count, self.charset)
+
+    def update_statusbar(self, buff):
+        self.clear_statusbar()
+        self.get_status(self.status)
+        self.get_line_amount(buff)
+        self.get_char_amount(buff)
+        self.get_charset(buff)
+        
+        # Update the status string to the latest information
+        self.create_status_string()
+        # Push it to the statusbar
+        self.statusbar.push(self.stat_id, self.status_string)
     
     def clear_statusbar(self):
-        pass
+        """Clear the statusbar of all messages"""
+        self.statusbar.remove_all(self.stat_id)
 
-    def get_char_amount(self):
-        pass
+    def get_line_amount(self, buff):
+        self.line_count = buff.get_line_count()
 
-    def get_line_amount(self, line_amount):
-        pass
+    def get_char_amount(self, buff):
+        """Get the amount of characters in the buffer"""
+        self.char_count = buff.get_char_count()
 
-    def get_charset(self, charset):
-        pass
+    def get_charset(self, buff):
+        self.charset = "none"
 
-
+    def get_status(self, message):
+        """Get the message to be displayed in the left corner of the statusbar."""
+        self.status = message
 
 umte = umte()
 Gtk.main()
