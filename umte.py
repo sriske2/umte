@@ -171,8 +171,8 @@ class umte:
         self.status_manager.update_statusbar(self.buff)
 
         # Load the config
-        self.config = Config(self.name)
-        self.check_config()
+        #self.config = Config(self.name)
+        #self.check_config()
 
         # Show the window
         self.win = self.builder.get_object("window1")
@@ -194,9 +194,8 @@ class umte:
         self.main_box = self.builder.get_object("main_box")
         self.main_box.pack_start(self.scroll1, True, True, 0)
         
-        # self.scroll1 is not at the correct position in self.main_box,
-        # set it to its proper position.
-        #self.main_box.reorder_child(self.scroll1, 2)
+        # Reposition self.scroll1 so it's above the statusbar.
+        self.main_box.reorder_child(self.scroll1, 1)
     
     def create_clipboard(self):
         """Create a clipboard object"""

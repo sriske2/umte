@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Icon=/home/skyler/dev/python/gtk3/umte/icons/umte-128.png
+Exec=/home/skyler/dev/python/gtk3/umte/umte.py
+Name=umte
+Icon=/home/skyler/dev/python/gtk3/umte/icons/umte-128.png
+Path=/home/skyler/dev/python/gtk3/umte/
