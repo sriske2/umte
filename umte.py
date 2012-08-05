@@ -73,13 +73,17 @@ class Config:
             print("config file exists.")
         else:
             print("config file does not exist, creating default config file.")
-            _file = open(self.conf_file, 'w')
-            _file.write(default_config)
-            _file.close()
-            print("config file has been created")
+            try:
+                _file = open(self.conf_file, 'w')
+                _file.write(default_config)
+                _file.close()
+                print("config file has been created")
+
+            except:
+                print("Unable to create config file, using default config")
     
     def read_config(self, section, _property):
-        """Read the _property's value in section and return the value."""
+        """Read the _property's value in section and return it."""
         return(self.config.get(section, _property))
         print("Reading config")
 
@@ -192,7 +196,7 @@ class umte:
         
         # self.scroll1 is not at the correct position in self.main_box,
         # set it to its proper position.
-        self.main_box.reorder_child(self.scroll1, 2)
+        #self.main_box.reorder_child(self.scroll1, 2)
     
     def create_clipboard(self):
         """Create a clipboard object"""
@@ -305,11 +309,9 @@ class umte:
         """Read the config's values and customize the program to what it specifies."""
         # Line numbers
         if self.config.read_config("view", "linenumbers") == 'yes':
-            self.text_area.set_show_line_numbers(True)
-            # Check off the line number item in the menu.
-            self.linenum_check.set_active(True)
-        else:
-            self.text_area.set_show_line_numbers(False)
+            # If the config says linenumbers should be shown
+            pass
+
     
     # callback functions
     def on_find_entry_activate(self, widget, data=None):
@@ -415,7 +417,7 @@ class umte:
             self.text_area.grab_focus()
     
     def on_linenumber_item_toggled(self, widget, data=None):
-        if widget.get_active() and self.config.read_config("view", "linenumbers") is not True:
+        if widget.get_active():
             self.text_area.set_show_line_numbers(True)
             # Write this change to the config
             self.config.write_config("view", "linenumbers", "yes")
@@ -450,6 +452,7 @@ class umte:
         self.on_find_rep_item_activate(None)
 
 class StatusbarManager:
+    #statusbar info idea: line: 44, column: 22, Spaces: 4
     def __init__(self, statusbar):
         self.statusbar = statusbar
         self.stat_id = self.statusbar.get_context_id("status_id")
