@@ -116,7 +116,15 @@ class Config:
 
 class umte:
     def __init__(self):
+        # Some information about the program
+        # This will be used in the about_dialog
         self.name = "umte"
+        self.version  = "0.0.1"
+        self.copyright_string = "Copyright 2012 Skyler Riske"
+        self.comments = "comments"
+        self.license = Gtk.License.MIT_X11
+        self.icon = Gtk.Image.new_from_file("icons/umte-128.png").get_pixbuf()
+
         self.path = None
         self.title = 'untitled - ' + self.name
 
@@ -127,8 +135,6 @@ class umte:
         # Connect the handlers to their callback functions.
         handler = {
             "on_window1_delete_event" : self.on_quit_item_activate,
-            "on_find_entry_activate" : self.on_find_entry_activate,
-            "on_find_entry_changed" : self.on_find_entry_changed,
             "on_new_file_item_activate" : self.on_new_file_activate,
             "on_open_item_activate" : self.on_open_item_activate,
             "on_save_item_activate" : self.on_save_item_activate,
@@ -144,12 +150,7 @@ class umte:
             "on_select_all_item_activate" : self.on_select_all_item_activate,
             "on_find_rep_item_activate" : self.on_find_rep_item_activate,
             "on_linenumber_item_toggled" : self.on_linenumber_item_toggled,
-            "on_about_item_activate" : self.on_about_item_activate,
-            "on_find_entry_activate" : self.on_find_entry_activate,
-            "on_find_entry_changed" : self.on_find_entry_changed,
-            "on_replace_entry_activate" : self.on_replace_entry_activate,
-            "on_replace_entry_changed" : self.on_replace_entry_changed,
-            "on_find_rep_close_button_clicked" : self.on_find_rep_close_button_clicked
+            "on_about_item_activate" : self.on_about_item_activate
                 }
         self.builder.connect_signals(handler)
 
@@ -170,6 +171,9 @@ class umte:
         self.status_manager = StatusbarManager(self.statusbar)
         self.status_manager.update_statusbar(self.buff)
 
+        # load the language manager
+        self.lang_manager = GtkSource.LanguageManager()
+
         # Load the config
         #self.config = Config(self.name)
         #self.check_config()
@@ -180,6 +184,9 @@ class umte:
         self.set_title(self.title)
         
         #self.menubar.hide()
+        # Disabled on startup
+        self.undo_item.set_sensitive(False)
+        self.redo_item.set_sensitive(False)
     
     def add_text_area(self):
         """Add a GtkSource View to the window."""
@@ -220,7 +227,7 @@ class umte:
             self.write_file(self.path)
         
             # Add the filename to the window's title
-            self.title = self.filename + " - " + self.name + ' - ' + str(os.path.getsize(self.path))
+            self.title = self.filename + " - " + self.name
             self.set_title(self.title)
 
         elif response == Gtk.ResponseType.CANCEL:
@@ -273,6 +280,10 @@ class umte:
         else:
             self.redo_item.set_sensitive(True)
         """
+        # Print the position of the cursor
+        #print(self.buff.get_property('cursor-position'))
+        self.undo_item.set_sensitive(True)
+
         if self.buff.get_modified() is True:
             if self.title[0] != '*':
                 self.title = '*' + self.title
@@ -282,7 +293,45 @@ class umte:
         self.status_manager.update_statusbar(self.buff)
     
     def open_file(self):
-        pass
+        """Open a file from disk"""
+        open_dialog = Gtk.FileChooserDialog("Open",
+                            self.win,
+                            Gtk.FileChooserAction.OPEN,
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                            Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        
+        response = open_dialog.run()
+        if response == Gtk.ResponseType.OK:
+            # If the user pressed OK
+            # Get the path and filename
+            self.path = open_dialog.get_filename()
+            self.filename = os.path.basename(self.path)
+
+            # Add the filename to the window's title
+            self.title = self.filename + " - " + self.name
+            self.set_title(self.title)
+
+            # Add the contents of the file to the buffer
+            _file = open(self.path, 'r')
+            self.buff.begin_not_undoable_action()
+            self.buff.set_text(_file.read())
+            self.buff.end_not_undoable_action()
+            _file.close()
+
+            ### syntax highlighting ###
+            # Figure out what kind of syntax we need to highlight
+            language =  self.lang_manager.guess_language(self.path, None) 
+            self.buff.set_language(language)
+            print(self.lang_manager.get_language_ids())
+
+            self.buff.set_modified(False)
+            open_dialog.destroy()
+
+
+        elif response == Gtk.ResponseType.CANCEL:
+            # The user clicked CANCEL
+            open_dialog.destroy()
+            return(True)
     
     def check_for_save(self):
         """
@@ -303,6 +352,19 @@ class umte:
             else:
                 ret = True
         return(ret)
+
+    def show_about_dialog(self):
+        """Create and show an about dialog"""
+        ab_dialog = Gtk.AboutDialog()
+        ab_dialog.set_program_name(self.name)
+        ab_dialog.set_version(self.version)
+        ab_dialog.set_copyright(self.copyright_string)
+        ab_dialog.set_comments(self.comments)
+        ab_dialog.set_license_type(self.license)
+        ab_dialog.set_logo(self.icon)
+
+        ab_dialog.run()
+        ab_dialog.destroy()
     
     def check_config(self):
         """Read the config's values and customize the program to what it specifies."""
@@ -313,17 +375,11 @@ class umte:
 
     
     # callback functions
-    def on_find_entry_activate(self, widget, data=None):
-        print("Find entry activated!")
-    
-    def on_find_entry_changed(self, widget, data=None):
-        print("Text changed in find entry!")
-
     def on_new_file_activate(self, widget, data=None):
         print("new file item activated!")
 
     def on_open_item_activate(self, widget, data=None):
-        pass
+        self.open_file()
     
     def on_save_item_activate(self, widget, data=None):
         """
@@ -426,30 +482,8 @@ class umte:
             self.config.write_config("view", "linenumbers", "no")
     
     def on_about_item_activate(self, widget, data=None):
-        print("About item activated!")
-        about_dialog = self.builder.get_object("umte_aboutdialog")
-        about_dialog.show()
-        about_dialog.run()
-        about_dialog.destroy()
-        #TODO delete the about dialog from glade, make it by hand
+        self.show_about_dialog()
     
-    # Find menu callbacks
-    def on_find_entry_activate(self, widget, data=None):
-        pass
-
-    def on_find_entry_changed(self, widget, data=None):
-        pass
-
-    def on_replace_entry_activate(self, widget, data=None):
-        pass
-    
-    def on_replace_entry_changed(self, widget, data=None):
-        if widget.get_text() != "":
-            pass
-    
-    def on_find_rep_close_button_clicked(self, widget, data=None):
-        self.on_find_rep_item_activate(None)
-
 class StatusbarManager:
     #statusbar info idea: line: 44, column: 22, Spaces: 4
     def __init__(self, statusbar):
