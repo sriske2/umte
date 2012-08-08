@@ -74,7 +74,7 @@ class Config:
         else:
             print("config file does not exist, creating default config file.")
             try:
-                _file = open(self.conf_file, 'w')
+                _file = open(self.conf_file, 'w', encoding='utf-8')
                 _file.write(default_config)
                 _file.close()
                 print("config file has been created")
@@ -96,7 +96,7 @@ class Config:
         # to ask if they want to create a default config.
         self.config.set(section, _property, value)
         # Write the changes to the conf_file
-        _file = open(self.conf_file, 'w')
+        _file = open(self.conf_file, 'w', encoding='utf-8')
         self.config.write(_file)
         _file.close()
         print("Successfully wrote changes to config")
@@ -122,7 +122,8 @@ class umte:
         self.version  = "0.0.1"
         self.copyright_string = "Copyright 2012 Skyler Riske"
         self.comments = "comments"
-        self.license = Gtk.License.MIT_X11
+        self.license = "MIT License"
+        self.license_type = Gtk.License.MIT_X11
         self.icon = Gtk.Image.new_from_file("icons/umte-128.png").get_pixbuf()
 
         self.path = None
@@ -184,10 +185,8 @@ class umte:
         self.set_title(self.title)
         
         #self.menubar.hide()
-        # Disabled on startup
-        self.undo_item.set_sensitive(False)
-        self.redo_item.set_sensitive(False)
-    
+        self.error("Hello", "This is a test error") 
+
     def add_text_area(self):
         """Add a GtkSource View to the window."""
         self.text_area = GtkSource.View()
@@ -237,9 +236,10 @@ class umte:
     
     def write_file(self, file_path):
         try:
-            _file = open(file_path, 'w')
+            _file = open(file_path, 'w', encoding='utf-8')
         except IOError:
-            print("Unable to open " + file_path)
+            self.error("Unable to open " + file_path, "check that you have proper permissions")
+            return()
         
         # Get the text from the buffer and add a \n to it
         start, end = self.buff.get_bounds()
@@ -251,7 +251,7 @@ class umte:
         self.buff.set_modified(False)
 
         # Remove the modification status from the title since the file has been saved.
-        self.title = self.filename + ' - ' + self.name + ' - ' + str(os.path.getsize(file_path))
+        self.title = self.filename + ' - ' + self.name
         self.set_title(self.title)
     
     def set_title(self, title):
@@ -312,7 +312,7 @@ class umte:
             self.set_title(self.title)
 
             # Add the contents of the file to the buffer
-            _file = open(self.path, 'r')
+            _file = open(self.path, 'r', encoding='utf-8')
             self.buff.begin_not_undoable_action()
             self.buff.set_text(_file.read())
             self.buff.end_not_undoable_action()
@@ -332,26 +332,46 @@ class umte:
             # The user clicked CANCEL
             open_dialog.destroy()
             return(True)
+
+    def new_file(self):
+        """Close the currently open file and start a new file"""
+        # In this program, creating a new file is the same as closing the
+        # current one, so just run the self.close_file() function
+        self.close_file()
     
-    def check_for_save(self):
-        """
+    """def check_for_save(self):
+
         Check if the buffer has been modified and prompt the user to save
         if it has been modified.
-        """
+
         ret = False
         
         if self.buff.get_modified():
             dialog = Gtk.MessageDialog(self.win,
                     Gtk.DialogFlags.MODAL|Gtk.DialogFlags.DESTROY_WITH_PARENT,
                     Gtk.MessageType.QUESTION,
-                    Gtk.ButtonsType.YES_NO,
-                    "Do you want to save your changes?")
+                    Gtk.ButtonsType.NONE,
+                    "There are unsaved changes.")
+            dialog.format_secondary_text("Before you close this file, do you want to save changes?")
+            # Add some buttons
+            dialog.add_buttons("Close without saving", 41)
+            dialog.add_buttons(Gtk.STOCK_CANCEL, 42)
+            dialog.add_buttons(Gtk.STOCK_SAVE, 43)
+
             response = dialog.run()
-            if response == Gtk.ResponseType.NO:
+            if response == 41:
                 ret = False
-            else:
+            elif response == 42:
+                ret = "cancel"
+            elif response == 43:
                 ret = True
-        return(ret)
+
+            dialog.destroy()
+
+        else:
+            return("not_modified")
+
+        return(ret)"""
 
     def show_about_dialog(self):
         """Create and show an about dialog"""
@@ -360,11 +380,32 @@ class umte:
         ab_dialog.set_version(self.version)
         ab_dialog.set_copyright(self.copyright_string)
         ab_dialog.set_comments(self.comments)
-        ab_dialog.set_license_type(self.license)
+        ab_dialog.set_license_type(self.license_type)
         ab_dialog.set_logo(self.icon)
 
         ab_dialog.run()
         ab_dialog.destroy()
+
+    def error(self, message, secondary_message):
+        """
+        Show an error dialog and print to the terminal with message 
+        and secondary_message.
+
+        This will be used whenever something does not go as it should
+        and the user needs to be notified of it.
+
+        """
+        print("ERROR: " + message + ' -- ' + secondary_message)
+
+        error_dialog = Gtk.MessageDialog(self.win,
+                Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.ERROR,
+                Gtk.ButtonsType.OK,
+                message)
+        error_dialog.format_secondary_text(secondary_message)
+        error_dialog.run()
+        error_dialog.destroy()
+
     
     def check_config(self):
         """Read the config's values and customize the program to what it specifies."""
@@ -374,9 +415,31 @@ class umte:
             pass
 
     
-    # callback functions
+    # callback methods
     def on_new_file_activate(self, widget, data=None):
-        print("new file item activated!")
+        if self.buff.get_modified() == True:
+            # If the buffer has been modified
+            dialog = Gtk.MessageDialog(self.win,
+                    Gtk.DialogFlags.MODAL|Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                    Gtk.MessageType.WARNING,
+                    Gtk.ButtonsType.NONE,
+                    "There are unsaved changes.")
+            dialog.format_secondary_text("Before you open a new file, do you want to save changes?")
+            # Add some buttons
+            dialog.add_buttons(Gtk.STOCK_CANCEL, 42)
+            dialog.add_buttons(Gtk.STOCK_SAVE, 43)
+
+            response = dialog.run()
+            if response == 42:
+                pass
+            elif response == 43:
+                self.on_save_item_activate(None)
+                self.new_file()
+
+            dialog.destroy()
+        else:
+            # If the buffer hasn't been modified, just run the new_file() function.
+            self.new_file()
 
     def on_open_item_activate(self, widget, data=None):
         self.open_file()
@@ -425,6 +488,7 @@ class umte:
         else:
             # If the buffer hasn't been modified, just close the file.
             self.close_file()
+
     
     def on_quit_item_activate(self, widget, data=None):
         """Stop the Gtk loop when activated."""
@@ -494,15 +558,13 @@ class StatusbarManager:
         self.status = "ready!"
 
     def create_status_string(self):
-        self.status_string = "{} | lines: {} | length: {} | charset: {}"\
-            .format(self.status, self.line_count, self.char_count, self.charset)
+        self.status_string = " lines: {}   length: {}"\
+            .format(self.line_count, self.char_count)
 
     def update_statusbar(self, buff):
         self.clear_statusbar()
-        self.get_status(self.status)
         self.get_line_amount(buff)
         self.get_char_amount(buff)
-        self.get_charset(buff)
         
         # Update the status string to the latest information
         self.create_status_string()
@@ -519,13 +581,6 @@ class StatusbarManager:
     def get_char_amount(self, buff):
         """Get the amount of characters in the buffer"""
         self.char_count = buff.get_char_count()
-
-    def get_charset(self, buff):
-        self.charset = "none"
-
-    def get_status(self, message):
-        """Get the message to be displayed in the left corner of the statusbar."""
-        self.status = message
 
 umte = umte()
 Gtk.main()
