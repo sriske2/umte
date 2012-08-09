@@ -11,13 +11,6 @@ umte, or "Uber Minimal Text Editor" is a python Gtk3 text editor built
 with simplicity in mind.
 umte is designed to be a primarily keyboard-shortcut based text editor to
 maximise efficiency.
-
-__author__ = "Skyler Riske"
-__copyright__ = "Copyright 2012 Skyler Riske"
-__credits__ = ["Skyler Riske"]
-__license__ = "MIT License"
-__version__ = "0.0.1"
-
 """
 
 from gi.repository import Gtk, GtkSource, Gdk
@@ -25,6 +18,7 @@ import os
 import errno
 import ConfigParser as configparser
 import xdg.BaseDirectory
+import time
 
 default_config = """[view]
 linenumbers = no
@@ -149,6 +143,8 @@ class umte:
             "on_paste_item_activate" : self.on_paste_item_activate,
             "on_delete_item_activate" : self.on_delete_item_activate,
             "on_select_all_item_activate" : self.on_select_all_item_activate,
+            "on_insert_date_item_activate" : self.on_insert_date_item_activate,
+            "on_change_case_item_activate" : self.on_change_case_item_activate,
             "on_find_rep_item_activate" : self.on_find_rep_item_activate,
             "on_linenumber_item_toggled" : self.on_linenumber_item_toggled,
             "on_about_item_activate" : self.on_about_item_activate
@@ -331,7 +327,6 @@ class umte:
         elif response == Gtk.ResponseType.CANCEL:
             # The user clicked CANCEL
             open_dialog.destroy()
-            return(True)
 
     def new_file(self):
         """Close the currently open file and start a new file"""
@@ -405,6 +400,26 @@ class umte:
         error_dialog.format_secondary_text(secondary_message)
         error_dialog.run()
         error_dialog.destroy()
+
+    def change_case(self, text):
+        """
+        Take the selection (text) and cycle it through different cases.
+
+        Similar to the extremely useful feature in Microsoft Word, 
+        take text, which will be the user's selected text and cycle it 
+        through being uppercase, lowercase and title format each time
+        the user runs this function and return the result.
+        """
+        if text.istitle():
+            newtext = text.upper()
+
+        elif text.isupper():
+            newtext = text.lower()
+
+        elif text.islower():
+            newtext = text.title()
+
+        return(newtext)
 
     
     def check_config(self):
@@ -534,7 +549,22 @@ class umte:
             self.find_rep_box.set_visible(False)
             # Give focus to the text area when the find menu is hidden
             self.text_area.grab_focus()
-    
+
+    def on_insert_date_item_activate(self, widget, data=None):
+        """Insert the current date in locale format at cursor position into the buffer."""
+        date = time.strftime('%x')
+        self.buff.insert_at_cursor(date, len(date))
+
+    def on_change_case_item_activate(self, widget, data=None):
+        #FIXME find a way to replace the selection with the new text.
+        start, end = self.buff.get_selection_bounds()
+        selection = self.buff.get_text(start, end, False)
+        print(selection)
+        
+       # # Delete the selection and replace it with the new text
+        #self.buff.delete_selection(True, True)
+        self.buff.insert(start, self.change_case(selection), -1)
+
     def on_linenumber_item_toggled(self, widget, data=None):
         if widget.get_active():
             self.text_area.set_show_line_numbers(True)
@@ -554,11 +584,8 @@ class StatusbarManager:
         self.statusbar = statusbar
         self.stat_id = self.statusbar.get_context_id("status_id")
 
-        # The message to be shown in the left of the statusbar
-        self.status = "ready!"
-
     def create_status_string(self):
-        self.status_string = " lines: {}   length: {}"\
+        self.status_string = " lines: {}  length: {}"\
             .format(self.line_count, self.char_count)
 
     def update_statusbar(self, buff):
