@@ -1,30 +1,45 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding:utf8 -*-
-#
-# This program is licensed under the MIT License (MIT),
-# see LICENSE for details.
-#TODO add a menu item to open the current file's directory
 """
+Copyright (C) 2012 Skyler Riske
+
+This program is licensed under the GNU GPLv3, see LICENSE for details.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 umte.py
 
 umte, or "Uber Minimal Text Editor" is a python Gtk3 text editor built
 with simplicity in mind.
-umte is designed to be a primarily keyboard-shortcut based text editor to
-maximise efficiency.
+
 """
 
-from gi.repository import Gtk, GtkSource, Gdk
 import os
 import errno
-import ConfigParser as configparser
-import xdg.BaseDirectory
+import configparser
 import time
+from gi.repository import Gtk, GtkSource, Gdk
+# The version of pyxdg in Fedora's repositories is out of date, so use a
+# more recent version that supports python3
+import xdg.BaseDirectory
+import umtelibs
 
 default_config = """[view]
 linenumbers = no
 """
 
-class Config:
+
+class Config(object):
     """
     The configuration class for umte to handle configuration stuff.
 
@@ -108,7 +123,9 @@ class Config:
                 pass
             else: raise
 
-class umte:
+
+class umte(object):
+
     def __init__(self):
         # Some information about the program
         # This will be used in the about_dialog
@@ -116,8 +133,8 @@ class umte:
         self.version  = "0.0.1"
         self.copyright_string = "Copyright 2012 Skyler Riske"
         self.comments = "comments"
-        self.license = "MIT License"
-        self.license_type = Gtk.License.MIT_X11
+        self.license = "GNU GPLv3"
+        self.license_type = Gtk.License.GPL_3_0
         self.icon = Gtk.Image.new_from_file("icons/umte-128.png").get_pixbuf()
 
         self.path = None
@@ -181,7 +198,6 @@ class umte:
         self.set_title(self.title)
         
         #self.menubar.hide()
-        self.error("Hello", "This is a test error") 
 
     def add_text_area(self):
         """Add a GtkSource View to the window."""
@@ -205,13 +221,15 @@ class umte:
 
     def save_as_file(self):
         """Prompt the user with a save dialog and write the file."""
-        save_dialog = Gtk.FileChooserDialog("Save As", self.win, 
-                                Gtk.FileChooserAction.SAVE,
-                                (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
-        # Tell the user if they're overwriting an existing file.
+        save_dialog = Gtk.FileChooserDialog(
+            "Save As", self.win, 
+            Gtk.FileChooserAction.SAVE,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+
+        # Make sure the user is warned if they're overwriting an existing file.
         save_dialog.set_do_overwrite_confirmation(True)
-        # Give a default filename
+        # Suggest a generic filename.
         save_dialog.set_current_name("untitled.txt")
 
         response = save_dialog.run()
@@ -235,7 +253,7 @@ class umte:
             _file = open(file_path, 'w', encoding='utf-8')
         except IOError:
             self.error("Unable to open " + file_path, "check that you have proper permissions")
-            return()
+            return
         
         # Get the text from the buffer and add a \n to it
         start, end = self.buff.get_bounds()
@@ -578,8 +596,14 @@ class umte:
     def on_about_item_activate(self, widget, data=None):
         self.show_about_dialog()
     
-class StatusbarManager:
-    #statusbar info idea: line: 44, column: 22, Spaces: 4
+
+class StatusbarManager(object):
+    """
+    A statusbar manager for umte to show useful information.
+
+    """
+    #TODO statusbar info idea: line: 44, column: 22, Spaces: 4
+
     def __init__(self, statusbar):
         self.statusbar = statusbar
         self.stat_id = self.statusbar.get_context_id("status_id")

@@ -1,2 +1,4 @@
-TODO:
+#---------- todos ----------#
+add a menu item to open the current file's directory
+add an optional terminal or python/3 interpreter window to the main window
 
