@@ -17,11 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+Author(s): Skyler Riske
+
 umte.py
 
 umte, or "Uber Minimal Text Editor" is a python Gtk3 text editor built
 with simplicity in mind.
-
 """
 
 import os
@@ -29,99 +30,7 @@ import errno
 import configparser
 import time
 from gi.repository import Gtk, GtkSource, Gdk
-# The version of pyxdg in Fedora's repositories is out of date, so use a
-# more recent version that supports python3
-import xdg.BaseDirectory
-import umtelibs
-
-default_config = """[view]
-linenumbers = no
-"""
-
-
-class Config(object):
-    """
-    The configuration class for umte to handle configuration stuff.
-
-    __init__:
-    Define the config file and path and check if they exist.
-
-    check_for_conf_path:
-    Check if the config path (~/.config/umte/) exists, create it if not.
-    
-    check_for_conf_file:
-    Check if the config file (~/.config/umte/umte.conf) exists, create it if not.
-    
-    """
-    
-    def __init__(self, program_name):
-        self.conf_file = os.path.join(xdg.BaseDirectory.xdg_config_home, 
-                                        program_name, 
-                                        program_name + ".conf")
-        self.conf_path = os.path.join(xdg.BaseDirectory.xdg_config_home,
-                                        program_name + '/')
-        self.check_for_conf_path()
-        self.check_for_conf_file()
-
-        # Load the parser and read the conf file
-        self.config = configparser.ConfigParser()
-        self.config.read(self.conf_file)
-        
-    def check_for_conf_path(self):
-        """Check for the conf_path, attempt to create if it doesn't exist"""
-        if os.path.exists(self.conf_path):
-            print("Config directory exists.")
-        else:
-            print("Config directory does not exists, creating")
-            self.mkdir_p(self.conf_path)
-            print("Config directory created")
-    
-    def check_for_conf_file(self):
-        """Check if the conf_file exists, create a default conf_file if one doesn't exist"""
-        if os.path.exists(self.conf_file):
-            print("config file exists.")
-        else:
-            print("config file does not exist, creating default config file.")
-            try:
-                _file = open(self.conf_file, 'w', encoding='utf-8')
-                _file.write(default_config)
-                _file.close()
-                print("config file has been created")
-
-            except:
-                print("Unable to create config file, using default config")
-    
-    def read_config(self, section, _property):
-        """Read the _property's value in section and return it."""
-        return(self.config.get(section, _property))
-        print("Reading config")
-
-    def write_config(self, section, _property, value):
-        """
-        Set _property's value to "value" in section and write changes 
-        to the conf file.
-        """
-        #TODO Check for the conf_file and prompt a dialog if it doesn't exist
-        # to ask if they want to create a default config.
-        self.config.set(section, _property, value)
-        # Write the changes to the conf_file
-        _file = open(self.conf_file, 'w', encoding='utf-8')
-        self.config.write(_file)
-        _file.close()
-        print("Successfully wrote changes to config")
-
-    def reload_config(self):
-        """Tell the parser to read the conf_file again."""
-        self.config.read(self.conf_file)
-    
-    def mkdir_p(self, path):
-        """mkdir -p functionality"""
-        try:
-            os.makedirs(path)
-        except OSError as exc:
-            if exc.errno == errno.EEXIST:
-                pass
-            else: raise
+from umtelibs import config
 
 
 class umte(object):
@@ -189,8 +98,7 @@ class umte(object):
         self.lang_manager = GtkSource.LanguageManager()
 
         # Load the config
-        #self.config = Config(self.name)
-        #self.check_config()
+        #self.config = config.Config(self.name)
 
         # Show the window
         self.win = self.builder.get_object("window1")
@@ -239,10 +147,6 @@ class umte(object):
             self.filename = os.path.basename(self.path)
             self.write_file(self.path)
         
-            # Add the filename to the window's title
-            self.title = self.filename + " - " + self.name
-            self.set_title(self.title)
-
         elif response == Gtk.ResponseType.CANCEL:
             pass
 
@@ -252,7 +156,9 @@ class umte(object):
         try:
             _file = open(file_path, 'w', encoding='utf-8')
         except IOError:
-            self.error("Unable to open " + file_path, "check that you have proper permissions")
+            self.error("Unable to save" + file_path, "Check that you have proper permissions")
+            self.path = None
+            self.filename = None
             return
         
         # Get the text from the buffer and add a \n to it
@@ -264,6 +170,7 @@ class umte(object):
         # 
         self.buff.set_modified(False)
 
+        # Add the filename to the window's title
         # Remove the modification status from the title since the file has been saved.
         self.title = self.filename + ' - ' + self.name
         self.set_title(self.title)
@@ -326,7 +233,15 @@ class umte(object):
             self.set_title(self.title)
 
             # Add the contents of the file to the buffer
-            _file = open(self.path, 'r', encoding='utf-8')
+            try:
+                _file = open(self.path, 'r', encoding='utf-8')
+            except IOError:
+                self.error("Unable to open" + self.path, "Check that you have proper permissions")
+                self.path = None
+                self.filename = None
+                open_dialog.destroy()
+                return
+
             self.buff.begin_not_undoable_action()
             self.buff.set_text(_file.read())
             self.buff.end_not_undoable_action()
@@ -341,10 +256,11 @@ class umte(object):
             self.buff.set_modified(False)
             open_dialog.destroy()
 
-
         elif response == Gtk.ResponseType.CANCEL:
             # The user clicked CANCEL
             open_dialog.destroy()
+
+        open_dialog.destroy()
 
     def new_file(self):
         """Close the currently open file and start a new file"""
