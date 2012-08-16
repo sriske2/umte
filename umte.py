@@ -96,11 +96,13 @@ class umte(object):
 
         # load the language manager
         self.lang_manager = GtkSource.LanguageManager()
+        
+        #self.statusbar_syntax_combobox()
 
         # Load the config
         #self.config = config.Config(self.name)
 
-        # Show the window
+        # Show the window and its children
         self.win = self.builder.get_object("window1")
         self.win.show_all()
         self.set_title(self.title)
@@ -122,6 +124,25 @@ class umte(object):
         
         # Reposition self.scroll1 so it's above the statusbar.
         self.main_box.reorder_child(self.scroll1, 1)
+
+    def statusbar_syntax_combobox(self):
+        """
+        Add a combobox that contains all the available languages that
+        can be highlighted.
+        
+        When an option is chosen, get the chosen language and tell the 
+        language manager to use it.
+        """
+        self.status_box = self.statusbar.get_message_area()
+        languages = self.lang_manager.get_language_ids()
+        print(languages)
+
+        self.language_combobox = Gtk.ComboBoxText()
+        self.language_combobox.set_entry_text_column(0)
+        self.language_combobox.connect("changed", self.on_language_combobox_changed)
+        for language in languages:
+            self.language_combobox.append_text(language)
+        self.status_box.pack_end(self.language_combobox, False, False, 0)
     
     def create_clipboard(self):
         """Create a clipboard object"""
@@ -508,6 +529,17 @@ class umte(object):
             self.text_area.set_show_line_numbers(False)
             # Write this change to the config
             self.config.write_config("view", "linenumbers", "no")
+    
+    def on_language_combobox_changed(self, widget, data=None):
+        """
+        When it is changed, get the chosen language and tell self.buff 
+        to highlight it.
+        """
+        chosen_language = widget.get_active_text()
+        if chosen_language != None:
+            print("highlighting: " + chosen_language)
+            lang = self.lang_manager.get_language(chosen_language)
+            self.buff.set_language(lang)
     
     def on_about_item_activate(self, widget, data=None):
         self.show_about_dialog()

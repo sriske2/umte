@@ -1,4 +1,4 @@
 #---------- todos ----------#
 add a menu item to open the current file's directory
 add an optional terminal or python/3 interpreter window to the main window
-
+add the ability for the user to choose a default language to highlight.
