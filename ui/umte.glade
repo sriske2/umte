@@ -234,18 +234,6 @@
                         <signal name="activate" handler="on_insert_date_item_activate" swapped="no"/>
                       </object>
                     </child>
-                    <child>
-                      <object class="GtkMenuItem" id="change_case_item">
-                        <property name="use_action_appearance">False</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Change the case of the selected text</property>
-                        <property name="label" translatable="yes">Change Case</property>
-                        <property name="use_underline">True</property>
-                        <accelerator key="F3" signal="activate"/>
-                        <signal name="activate" handler="on_change_case_item_activate" swapped="no"/>
-                      </object>
-                    </child>
                   </object>
                 </child>
               </object>
