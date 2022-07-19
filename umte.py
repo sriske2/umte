@@ -31,6 +31,7 @@ import configparser
 import time
 from gi.repository import Gtk, GtkSource, Gdk
 from umtelibs import config
+from terminal import Term
 
 
 class umte(object):
@@ -73,11 +74,13 @@ class umte(object):
             "on_change_case_item_activate" : self.on_change_case_item_activate,
             "on_find_rep_item_activate" : self.on_find_rep_item_activate,
             "on_linenumber_item_toggled" : self.on_linenumber_item_toggled,
-            "on_about_item_activate" : self.on_about_item_activate
+            "on_about_item_activate" : self.on_about_item_activate,
+            "on_terminal_item_toggled" : self.on_terminal_item_toggled
                 }
         self.builder.connect_signals(handler)
 
         self.add_text_area()
+        self.add_terminal_area()
         self.create_clipboard()
 
         # References widgets from the glade file for later usage.
@@ -105,6 +108,7 @@ class umte(object):
         # Show the window and its children
         self.win = self.builder.get_object("window1")
         self.win.show_all()
+        self.terminal_area.hide()
         self.set_title(self.title)
         
         #self.menubar.hide()
@@ -124,6 +128,14 @@ class umte(object):
         
         # Reposition self.scroll1 so it's above the statusbar.
         self.main_box.reorder_child(self.scroll1, 1)
+
+    def add_terminal_area(self):
+        """Add a ScrolledWindow for terminal to the window."""
+        self.terminal_area = Gtk.ScrolledWindow()
+        self.terminal = Term("/bin/bash")
+        self.terminal_area.add(self.terminal)
+        self.main_box.pack_start(self.terminal_area, True, True, 0)
+        self.main_box.reorder_child(self.terminal_area, 2)
 
     def statusbar_syntax_combobox(self):
         """
@@ -529,7 +541,13 @@ class umte(object):
             self.text_area.set_show_line_numbers(False)
             # Write this change to the config
             self.config.write_config("view", "linenumbers", "no")
-    
+
+    def on_terminal_item_toggled(self, widget, data=None):
+        if widget.get_active():
+            self.terminal_area.show()
+        else:
+            self.terminal_area.hide()
+
     def on_language_combobox_changed(self, widget, data=None):
         """
         When it is changed, get the chosen language and tell self.buff 
