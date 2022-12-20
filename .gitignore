@@ -2,3 +2,5 @@
 *~
 screenshots/
 *.pyc
+.idea/
+env/
