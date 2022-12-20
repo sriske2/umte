@@ -8,8 +8,8 @@ A lightweight python gtk3 text editor.
 * Basic text editor functionality
 * Syntax highlighting
 * Line numbers
-* (in progress)Terminal bottom-window
+* Terminal bottom-window
 
 ## Requirements
 * *Python 3.1 or higher*
-* Gtk3 shtuff
+* Gtk3 stuff
