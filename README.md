@@ -12,4 +12,5 @@ A lightweight python gtk3 text editor.
 
 ## Requirements
 * *Python 3.1 or higher*
-* Gtk3 stuff
+* Gtk3
+
