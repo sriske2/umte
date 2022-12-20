@@ -31,7 +31,7 @@ import configparser
 import time
 from gi.repository import Gtk, GtkSource, Gdk
 from umtelibs import config
-from terminal import Term
+from umtelibs.terminal import Term
 
 
 class umte(object):
