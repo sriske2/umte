@@ -1,5 +1,5 @@
 # umte
-#### "uber minimal text editor"
+#### "ultra minimal text editor"
 A lightweight python gtk3 text editor.
 
 ![screenshot](http://i.imgur.com/Yi44g.png)
@@ -12,5 +12,5 @@ A lightweight python gtk3 text editor.
 
 ## Requirements
 * *Python 3.1 or higher*
-* Gtk3
+* GTK 3
 
